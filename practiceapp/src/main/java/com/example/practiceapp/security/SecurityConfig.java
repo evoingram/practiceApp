@@ -22,7 +22,7 @@ public class SecurityConfig {
             .cors().and()  // Add this line to enable CORS
             .csrf().disable() // Disable CSRF for simplicity in testing
             .authorizeRequests()
-                .antMatchers("/api/users", "/h2-console/**").permitAll() // Allow all access to /api/users and H2 console
+                .antMatchers("/api/users", "/h2-console/**", "/api/recurring-expenses/**", "/api/export/**").permitAll() // Allow all access to /api/users and H2 console
                 .anyRequest().authenticated() // Require authentication for all other requests
             .and()
             .httpBasic(); // Enable basic authentication
