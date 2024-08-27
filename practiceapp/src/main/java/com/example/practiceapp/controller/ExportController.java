@@ -1,7 +1,7 @@
 package com.example.practiceapp.controller;
 
 import com.example.practiceapp.service.TransactionService;
-import com.example.practiceapp.model.Transaction;  // Add this import
+import com.example.practiceapp.model.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,11 +26,15 @@ public class ExportController {
     }
 
     @PostMapping
-    public ResponseEntity<String> exportTransactionsToCSV() {
-        String filePath = "/app/Temp/transactions.csv";
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-            List<Transaction> transactions = transactionService.getAllTransactions();
+    public ResponseEntity<String> exportTransactionsToCSV(@RequestParam(required = false, defaultValue = "/app/Temp/transactions.csv") String filePath) {
+        List<Transaction> transactions = transactionService.getAllTransactions();
 
+        if (transactions.isEmpty()) {
+            logger.warn("No transactions available to export.");
+            return new ResponseEntity<>("No transactions available to export", HttpStatus.NO_CONTENT);
+        }
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
             writer.write("ID,Category,Amount,Date\n");
             for (Transaction transaction : transactions) {
                 writer.write(transaction.getId() + "," + transaction.getCategory() + "," + transaction.getAmount() + "," + transaction.getDate() + "\n");

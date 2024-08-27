@@ -1,7 +1,9 @@
 package com.example.practiceapp.controller;
 
+import com.example.practiceapp.dto.UserDTO;
 import com.example.practiceapp.model.User;
 import com.example.practiceapp.service.UserService;
+import com.example.practiceapp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,11 +25,14 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private UserRepository userRepository;
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
         try {
-            List<User> users = userService.getAllUsers();
+            List<UserDTO> users = userService.getAllUsers();
             if (users.isEmpty()) {
                 logger.info("No users found.");
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -41,9 +46,9 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
         try {
-            Optional<User> user = userService.getUserById(id);
+            Optional<UserDTO> user = userService.getUserById(id);
             if (user.isPresent()) {
                 return new ResponseEntity<>(user.get(), HttpStatus.OK);
             } else {
@@ -57,9 +62,9 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody User user) {
         try {
-            User createdUser = userService.saveUser(user);
+            UserDTO createdUser = userService.saveUser(user);
             logger.info("Created user with id {}", createdUser.getId());
             return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
         } catch (Exception e) {
@@ -69,17 +74,17 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @Valid @RequestBody User userDetails) {
+    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody User userDetails) {
         try {
-            Optional<User> user = userService.getUserById(id);
+            Optional<UserDTO> user = userService.getUserById(id);
             if (user.isPresent()) {
-                User updatedUser = user.get();
+                User updatedUser = userRepository.findById(id).get();
                 updatedUser.setUsername(userDetails.getUsername());
                 updatedUser.setEmail(userDetails.getEmail());
                 updatedUser.setPassword(userDetails.getPassword());
-                userService.saveUser(updatedUser);
-                logger.info("Updated user with id {}", updatedUser.getId());
-                return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+                UserDTO updatedUserDTO = userService.saveUser(updatedUser);
+                logger.info("Updated user with id {}", updatedUserDTO.getId());
+                return new ResponseEntity<>(updatedUserDTO, HttpStatus.OK);
             } else {
                 logger.info("User with id {} not found for update.", id);
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -93,7 +98,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deleteUser(@PathVariable Long id) {
         try {
-            Optional<User> user = userService.getUserById(id);
+            Optional<UserDTO> user = userService.getUserById(id);
             if (user.isPresent()) {
                 userService.deleteUser(id);
                 logger.info("Deleted user with id {}", id);
